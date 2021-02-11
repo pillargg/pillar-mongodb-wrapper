@@ -21,5 +21,6 @@ setuptools.setup(
     python_requires='>=3.6',
     install_requires=[
         'pymongo>=3.11.3',
+        'moviepy>=1.0.3'
     ]
 )

@@ -1,7 +1,9 @@
-from pymongo import MongoClient
 import datetime
-import os
 import math
+import os
+
+from moviepy.editor import VideoFileClip
+from pymongo import MongoClient
 
 
 class DBClient:
@@ -123,7 +125,7 @@ class DBClient:
 
     def analyzeStream(self, streamer):
         """
-        This function returns a streamers messege information during the duration of a videoclip
+        This function returns a streamers message information during the duration of a videoclip
         """
         streamer_output_file_location = self.output_file_location + streamer + '/'
 
@@ -181,16 +183,3 @@ class DBClient:
         print("total messages: " + str(results.count()))
 
         return total_data
-
-
-if (__name__ == "__main__"):
-    while True:
-        value = input(
-            "Would you like to erase and recreate the database?[Y/N]")
-        if (value == "Y"):
-            dbclient = DBClient()
-            dbclient.recreate_db()
-            break
-        elif (value == "N"):
-            break
-        print("Incorrect input provided.")
