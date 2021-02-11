@@ -11,16 +11,15 @@ class DBClient:
     Class handles all connections to and from the MongoDB database.
     """
 
-    def __init__(self, output_file_location):
+    def __init__(self, output_file_location=''):
         """
         Initializes the connection to the MongoDB database
         """
         print('DB NAME: ' + os.environ.get("MONGODB_DBNAME"))
         self.db_name = os.environ.get("MONGODB_DBNAME")
-        #self.db_name = 'TwitchHighlights_Dev'
+
         self.output_file_location = output_file_location
-        # self.output_file_location = './TwitchHighlightsOutput/' + \
-        #    datetime.datetime.now().strftime("%Y.%d.%m") + '/'
+
         self.mongo_client = MongoClient(
             'mongodb+srv://admin:' +
             os.environ.get('MONGODB_PASS') +
@@ -42,7 +41,7 @@ class DBClient:
             "contents": contents,
             "datetime": str(thedatetime),
             "streamer": streamer}
-        x = self.messagesCollection.insert_one(messageDocument)
+        self.messagesCollection.insert_one(messageDocument)
 
     def inputStream(self, streamer, thedatetime, numviewers):
         """
@@ -77,11 +76,9 @@ class DBClient:
         streamsDocument = {"streamer": "teststreamer", "datetime": str(
             datetime.datetime.now()), "numviewers": "9002"}
 
-        x = messagesCollection.insert_one(messageDocument)
-        y = streamsCollection.insert_one(streamsDocument)
+        messagesCollection.insert_one(messageDocument)
+        streamsCollection.insert_one(streamsDocument)
 
-        # print(x.inserted_id)
-        # print(y.inserted_id)
         print("Database Recreated")
 
     def analyze_number_of_stream_viewers(self, streamer):
@@ -98,11 +95,10 @@ class DBClient:
             clip_start_time = datetime.datetime.strptime(
                 onlydata, '%Y-%m-%d %H:%M:%S.%f')
             print("Video clip start time: " + str(clip_start_time))
-            #print(datetime_onlydata + datetime.timedelta(days=1))
 
         # open videofile and read length
         duration_in_seconds = 0
-        # with VideoFileClip(''.join([streamer_output_file_location, streamer, '.mkv'])) as clip:
+
         with VideoFileClip(''.join([streamer_output_file_location, streamer, '.mp4'])) as clip:
             duration_in_seconds = clip.duration
 
@@ -138,7 +134,6 @@ class DBClient:
             clip_start_time = datetime.datetime.strptime(
                 onlydata, '%Y-%m-%d %H:%M:%S.%f')
             print("Video clip start time: " + str(clip_start_time))
-            #print(datetime_onlydata + datetime.timedelta(days=1))
 
         # open videofile and read length
         duration_in_seconds = 0
@@ -161,12 +156,9 @@ class DBClient:
             end_time = start_time + datetime.timedelta(minutes=1)
             results = self.messagesCollection.find({"streamer": streamer, "datetime": {
                                                    '$gte': str(start_time), '$lt': str(end_time)}})
-            # for result in results:
-            #     print(result["datetime"])
-            # total_data.append({'start_time':start_time,'end_time':end_time,'messeges_count':results.count()})
-            if(results.count() > 0):
-                #print("messeges posted from " + str(start_time) +" to " + str(end_time))
-                # print(results.count())
+
+            if results.count():
+
                 output_start_time = start_time - clip_start_time
                 output_end_time = end_time - clip_start_time
                 print("Adding data for time: " +
@@ -178,7 +170,6 @@ class DBClient:
                                    'source_clip': streamer})
 
         results = self.messagesCollection.find({"streamer": streamer})
-        #results = self.messagesCollection.find({"streamer":streamer, "datetime":{'$gte':str(start),'$lt':str(end)}})
 
         print("total messages: " + str(results.count()))
 
