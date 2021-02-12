@@ -64,30 +64,30 @@ class DBClient:
 
         self.streamsCollection.insert_one(streamsDocument)
 
-    def recreate_db(self):
-        """
-        drops the database and recreates it from scratch
-        WARNING: all data will be lost
-        """
+    # def recreate_db(self):
+    #     """
+    #     drops the database and recreates it from scratch
+    #     WARNING: all data will be lost
+    #     """
 
-        self.mongo_client.drop_database(self.db_name)
-        db = self.mongo_client[self.db_name]
-        messagesCollection = db["messages"]
-        streamsCollection = db["streams"]
+    #     self.mongo_client.drop_database(self.db_name)
+    #     db = self.mongo_client[self.db_name]
+    #     messagesCollection = db["messages"]
+    #     streamsCollection = db["streams"]
 
-        messageDocument = {
-            "username": "testUser",
-            "contents": "I am posting a new message",
-            "datetime": str(
-                datetime.datetime.now()),
-            "streamer": "teststreamer"}
-        streamsDocument = {"streamer": "teststreamer", "datetime": str(
-            datetime.datetime.now()), "numviewers": "9002"}
+    #     messageDocument = {
+    #         "username": "testUser",
+    #         "contents": "I am posting a new message",
+    #         "datetime": str(
+    #             datetime.datetime.now()),
+    #         "streamer": "teststreamer"}
+    #     streamsDocument = {"streamer": "teststreamer", "datetime": str(
+    #         datetime.datetime.now()), "numviewers": "9002"}
 
-        messagesCollection.insert_one(messageDocument)
-        streamsCollection.insert_one(streamsDocument)
+    #     messagesCollection.insert_one(messageDocument)
+    #     streamsCollection.insert_one(streamsDocument)
 
-        print("Database Recreated")
+    #     print("Database Recreated")
 
     def analyze_number_of_stream_viewers(self, streamer, datetime):
         """
@@ -120,7 +120,7 @@ class DBClient:
 
         return total_data
 
-    def analyze_stream(self, streamer):
+    def clip_message_analytics(self, streamer):
         """
         This function returns a streamers message information during the duration of a videoclip
         """
