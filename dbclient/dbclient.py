@@ -2,7 +2,6 @@ import datetime
 import math
 import os
 
-from moviepy.editor import VideoFileClip
 from pymongo import MongoClient
 
 from .lib import duration_to_int
@@ -90,26 +89,19 @@ class DBClient:
 
         print("Database Recreated")
 
-    def analyze_number_of_stream_viewers(self, streamer):
+    def analyze_number_of_stream_viewers(self, streamer, datetime):
         """
         This function returns a streamers viewers over time
         """
-        streamer_output_file_location = self.output_file_location + streamer + '/'
-        # open file and read start time.
-        with open(''.join([streamer_output_file_location, streamer, '.txt']), 'r') as f:
-            data = f.read()
-            streamer = data.split(' ', 1)[0]
-            onlydata = data.split(' ', 1)[1]
-            print(onlydata)
-            clip_start_time = datetime.datetime.strptime(
-                onlydata, '%Y-%m-%d %H:%M:%S.%f')
-            print("Video clip start time: " + str(clip_start_time))
 
-        # open videofile and read length
-        duration_in_seconds = 0
+        stream = self.streamsCollection.find_one({'streamer': streamer}, sort=[
+                                                 ('_id', -1)])  # sort in descending order
 
-        with VideoFileClip(''.join([streamer_output_file_location, streamer, '.mp4'])) as clip:
-            duration_in_seconds = clip.duration
+        # read length
+        duration_in_seconds = stream.get('duration')
+        # get start time and convert to datetime
+        clip_start_time = datetime.datetime.strptime(
+            stream.get('datetime'), '%Y-%m-%d %H:%M:%S.%f')
 
         clip_duration = datetime.timedelta(seconds=duration_in_seconds)
 
@@ -132,22 +124,15 @@ class DBClient:
         """
         This function returns a streamers message information during the duration of a videoclip
         """
-        streamer_output_file_location = self.output_file_location + streamer + '/'
 
-        # open file and read start time.
-        with open(''.join([streamer_output_file_location, streamer, '.txt']), 'r') as f:
-            data = f.read()
-            streamer = data.split(' ', 1)[0]
-            onlydata = data.split(' ', 1)[1]
-            print(onlydata)
-            clip_start_time = datetime.datetime.strptime(
-                onlydata, '%Y-%m-%d %H:%M:%S.%f')
-            print("Video clip start time: " + str(clip_start_time))
+        stream = self.streamsCollection.find_one({'streamer': streamer}, sort=[
+                                                 ('_id', -1)])  # sort in descending order
 
-        # open videofile and read length
-        duration_in_seconds = 0
-        with VideoFileClip(''.join([streamer_output_file_location, streamer, '.mp4'])) as clip:
-            duration_in_seconds = clip.duration
+        # read length
+        duration_in_seconds = stream.get('duration')
+        # get start time and convert to datetime
+        clip_start_time = datetime.datetime.strptime(
+            stream.get('datetime'), '%Y-%m-%d %H:%M:%S.%f')
 
         minutes = math.ceil(duration_in_seconds / 60)
 
