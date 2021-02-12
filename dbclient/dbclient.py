@@ -29,7 +29,7 @@ class DBClient:
         self.messagesCollection = self.db["messages"]
         self.streamsCollection = self.db["streams"]
 
-    def inputMessage(self, username, contents, thedatetime, streamer):
+    def input_message(self, username, contents, thedatetime, streamer):
         """
         Inputs a message into the database
         username and streamer are strings without spaces
@@ -44,7 +44,7 @@ class DBClient:
             "streamer": streamer}
         self.messagesCollection.insert_one(messageDocument)
 
-    def inputStream(self, streamer, thedatetime, numviewers, duration):
+    def input_stream(self, streamer, thedatetime, numviewers, duration):
         """
         Inputs a stream into the database
         streamer is a string without spaces
@@ -120,7 +120,7 @@ class DBClient:
 
         return total_data
 
-    def analyzeStream(self, streamer):
+    def analyze_stream(self, streamer):
         """
         This function returns a streamers message information during the duration of a videoclip
         """
