@@ -5,6 +5,8 @@ import os
 from moviepy.editor import VideoFileClip
 from pymongo import MongoClient
 
+from .lib import duration_to_int
+
 
 class DBClient:
     """
@@ -43,16 +45,23 @@ class DBClient:
             "streamer": streamer}
         self.messagesCollection.insert_one(messageDocument)
 
-    def inputStream(self, streamer, thedatetime, numviewers):
+    def inputStream(self, streamer, thedatetime, numviewers, duration):
         """
         Inputs a stream into the database
         streamer is a string without spaces
         numviewers is an int
         thedatetime is a datetime
+        duration is either a string or an integer
+        if it is a string it will be converted to an integer.
+        the string must be of the format "XXhXXmXXs" where XX represent integers
         e.g. ("captainSparklez", datetime.datetime.now(), 500)
         """
+
+        if type(duration) == str:
+            duration = duration_to_int(duration)
+
         streamsDocument = {"streamer": streamer, "datetime": str(
-            thedatetime), "numviewers": str(numviewers)}
+            thedatetime), "numviewers": str(numviewers), "duration": duration}
 
         self.streamsCollection.insert_one(streamsDocument)
 
