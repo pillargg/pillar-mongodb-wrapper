@@ -12,7 +12,7 @@ class DBClient:
     Class handles all connections to and from the MongoDB database.
     """
 
-    def __init__(self, output_file_location=''):
+    def __init__(self, output_file_location='', override_url=None):
         """
         Initializes the connection to the MongoDB database
         """
@@ -21,10 +21,16 @@ class DBClient:
 
         self.output_file_location = output_file_location
 
-        self.mongo_client = MongoClient(
-            'mongodb+srv://admin:' +
-            os.environ.get('MONGODB_PASS') +
-            '@c0.relki.mongodb.net')
+        self.mongo_client = None
+
+        if override_url is None:
+            self.mongo_client = MongoClient(
+                'mongodb+srv://admin:' +
+                os.environ.get('MONGODB_PASS') +
+                '@c0.relki.mongodb.net')
+        else:
+            self.mongo_client = MongoClient(override_url)
+
         self.db = self.mongo_client[self.db_name]
         self.messagesCollection = self.db["messages"]
         self.streamsCollection = self.db["streams"]
