@@ -35,7 +35,7 @@ class DBClient:
         self.messagesCollection = self.db["messages"]
         self.streamsCollection = self.db["streams"]
 
-    def input_message(self, username, contents, thedatetime, streamer):
+    def input_message(self, username, contents, thedatetime, streamer, video=None):
         """
         Inputs a message into the database
         username and streamer are strings without spaces
@@ -47,7 +47,8 @@ class DBClient:
             "username": username,
             "contents": contents,
             "datetime": str(thedatetime),
-            "streamer": streamer}
+            "streamer": streamer,
+            "video_id": video}
         self.messagesCollection.insert_one(messageDocument)
 
     def input_stream(self, streamer, thedatetime, numviewers, duration):
