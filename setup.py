@@ -5,7 +5,7 @@ with open('README.md') as readme:
 
 setuptools.setup(
     name='pillar-mongodb-wrapper',
-    version='0.0.1',
+    version='0.0.2',
     author="PillarGG",
     author_email='chandler@pillar.gg',
     description='Our internal MongoDB wrapper.',
@@ -20,6 +20,7 @@ setuptools.setup(
     ],
     python_requires='>=3.6',
     install_requires=[
-        'pymongo>=3.11.3'
+        'pymongo>=3.11.3',
+        'dnspython>=2.1.0'
     ]
 )

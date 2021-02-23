@@ -16,8 +16,9 @@ class DBClient:
         """
         Initializes the connection to the MongoDB database
         """
-        print('DB NAME: ' + os.environ.get("MONGODB_DBNAME"))
+
         self.db_name = os.environ.get("MONGODB_DBNAME")
+        print('DB NAME: ' + os.environ.get("MONGODB_DBNAME"))
 
         self.output_file_location = output_file_location
 
@@ -41,6 +42,8 @@ class DBClient:
         username and streamer are strings without spaces
         contents is a string
         thedatetime is a datetime
+
+        returns the ID of the object inserted
         """
 
         messageDocument = {
@@ -49,7 +52,8 @@ class DBClient:
             "datetime": str(thedatetime),
             "streamer": streamer,
             "video_id": video}
-        self.messagesCollection.insert_one(messageDocument)
+
+        return self.messagesCollection.insert_one(messageDocument).inserted_id
 
     def input_stream(self, streamer, thedatetime, numviewers, duration):
         """
@@ -61,6 +65,8 @@ class DBClient:
         if it is a string it will be converted to an integer.
         the string must be of the format "XXhXXmXXs" where XX represent integers
         e.g. ("captainSparklez", datetime.datetime.now(), 500)
+
+        returns the ID of the object inserted
         """
 
         if type(duration) == str:
@@ -69,40 +75,19 @@ class DBClient:
         streamsDocument = {"streamer": streamer, "datetime": str(
             thedatetime), "numviewers": str(numviewers), "duration": duration}
 
-        self.streamsCollection.insert_one(streamsDocument)
+        return self.streamsCollection.insert_one(streamsDocument).inserted_id
 
-    # def recreate_db(self):
-    #     """
-    #     drops the database and recreates it from scratch
-    #     WARNING: all data will be lost
-    #     """
-
-    #     self.mongo_client.drop_database(self.db_name)
-    #     db = self.mongo_client[self.db_name]
-    #     messagesCollection = db["messages"]
-    #     streamsCollection = db["streams"]
-
-    #     messageDocument = {
-    #         "username": "testUser",
-    #         "contents": "I am posting a new message",
-    #         "datetime": str(
-    #             datetime.datetime.now()),
-    #         "streamer": "teststreamer"}
-    #     streamsDocument = {"streamer": "teststreamer", "datetime": str(
-    #         datetime.datetime.now()), "numviewers": "9002"}
-
-    #     messagesCollection.insert_one(messageDocument)
-    #     streamsCollection.insert_one(streamsDocument)
-
-    #     print("Database Recreated")
-
-    def analyze_number_of_stream_viewers(self, streamer, datetime):
+    def analyze_number_of_stream_viewers(self, streamer, datetime, _id=None):
         """
         This function returns a streamers viewers over time
+        This should be moved to the 
         """
-
-        stream = self.streamsCollection.find_one({'streamer': streamer}, sort=[
-                                                 ('_id', -1)])  # sort in descending order
+        stream = None
+        if not _id:
+            stream = self.streamsCollection.find_one({'streamer': streamer}, sort=[
+                ('_id', -1)])  # sort in descending order
+        else:
+            stream = self.streamsCollection.find_one({'_id': _id})
 
         # read length
         duration_in_seconds = stream.get('duration')
@@ -127,10 +112,20 @@ class DBClient:
 
         return total_data
 
-    def clip_message_analytics(self, streamer):
+    def clip_message_analytics(self, streamer, _id=None):
         """
         This function returns a streamers message information during the duration of a videoclip
+
+        This should be moved to the clip_processor project by extending this class
         """
+
+        stream = None
+
+        if not _id:
+            stream = self.streamsCollection.find_one({'streamer': streamer}, sort=[
+                ('_id', -1)])  # sort in descending order
+        else:
+            stream = self.streamsCollection.find_one({'_id': _id})
 
         stream = self.streamsCollection.find_one({'streamer': streamer}, sort=[
                                                  ('_id', -1)])  # sort in descending order
