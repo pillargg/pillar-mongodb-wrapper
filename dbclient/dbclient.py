@@ -55,7 +55,7 @@ class DBClient:
 
         return self.messagesCollection.insert_one(messageDocument).inserted_id
 
-    def input_stream(self, streamer, thedatetime, numviewers, duration):
+    def input_stream(self, streamer, thedatetime, numviewers, duration, video_id=None):
         """
         Inputs a stream into the database
         streamer is a string without spaces
@@ -72,8 +72,13 @@ class DBClient:
         if type(duration) == str:
             duration = duration_to_int(duration)
 
-        streamsDocument = {"streamer": streamer, "datetime": str(
-            thedatetime), "numviewers": str(numviewers), "duration": duration}
+        streamsDocument = {
+            "streamer": streamer,
+            "datetime": str(thedatetime),
+            "numviewers": numviewers,
+            "duration": duration,
+            "video_id": video_id
+        }
 
         return self.streamsCollection.insert_one(streamsDocument).inserted_id
 
