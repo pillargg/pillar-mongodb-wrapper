@@ -33,34 +33,37 @@ class DBClient:
             self.mongo_client = MongoClient(override_url)
 
         self.db = self.mongo_client[self.db_name]
-        self.messagesCollection = self.db["messages"]
-        self.streamsCollection = self.db["streams"]
+        self.messages_collection = self.db["messages"]
+        self.streams_collection = self.db["streams"]
+        self.clip_collection = self.db["clips"]
 
-    def input_message(self, username, contents, thedatetime, streamer, video=None):
+    def input_message(self, username, contents, timestamp, streamer, video=None, platform="twitch"):
         """
         Inputs a message into the database
         username and streamer are strings without spaces
         contents is a string
-        thedatetime is a datetime
+        timestamp is a datetime
 
         returns the ID of the object inserted
         """
 
-        messageDocument = {
+        message_document = {
             "username": username,
             "contents": contents,
-            "datetime": str(thedatetime),
+            "datetime": str(timestamp),
             "streamer": streamer,
-            "video_id": video}
+            "platform_video_id": video,
+            "platform": platform
+        }
 
-        return self.messagesCollection.insert_one(messageDocument).inserted_id
+        return self.messages_collection.insert_one(message_document).inserted_id
 
-    def input_stream(self, streamer, thedatetime, numviewers, duration, video_id=None):
+    def input_stream(self, author, timestamp, viewers, duration, video_id=None, s3_object=None, platform="twitch"):
         """
         Inputs a stream into the database
-        streamer is a string without spaces
-        numviewers is an int
-        thedatetime is a datetime
+        author is a string without spaces
+        viewers is an int
+        timestamp is a datetime
         duration is either a string or an integer
         if it is a string it will be converted to an integer.
         the string must be of the format "XXhXXmXXs" where XX represent integers
@@ -72,15 +75,43 @@ class DBClient:
         if type(duration) == str:
             duration = duration_to_int(duration)
 
-        streamsDocument = {
-            "streamer": streamer,
-            "datetime": str(thedatetime),
-            "numviewers": numviewers,
+        stream_document = {
+            "author": author,
+            "datetime": str(timestamp),
+            "viewers": viewers,
             "duration": duration,
-            "video_id": video_id
+            "platform_video_id": video_id,
+            "s3_object_name": s3_object,  # this should be the platform id
+            "platform": platform  # for now assume this is twitch
         }
 
-        return self.streamsCollection.insert_one(streamsDocument).inserted_id
+        return self.streams_collection.insert_one(stream_document).inserted_id
+
+    def input_clip(self, clip_data):
+        '''
+        Inputs a clip to the database. Here is an example of what the clip data should look like.
+        {
+            "title": "Chandler gets headshot",
+            "description": "I get shot in the face",
+            "clip_started_at": "2021-02-22T18:51:52Z",
+            "author": "chand1012",
+            "type": "mp4",
+            "original_video": {
+                "platform_video_id": "vPOOO1w_Oko",
+                "video_db_id": "603530fa96a86dc591e8a044",
+                "source": "youtube",
+                "started_at": "2021-02-22T18:51:52Z",
+                "duration": 3600
+            },
+            "placement": 12,
+            "duration": 60,
+            "tags": [],
+            "s3_url": "",
+            "score": 69
+        }
+        '''
+
+        return self.clip_collection.insert_one(clip_data).inserted_id
 
     def analyze_number_of_stream_viewers(self, streamer, datetime, _id=None):
         """
@@ -89,10 +120,10 @@ class DBClient:
         """
         stream = None
         if not _id:
-            stream = self.streamsCollection.find_one({'streamer': streamer}, sort=[
+            stream = self.streams_collection.find_one({'streamer': streamer}, sort=[
                 ('_id', -1)])  # sort in descending order
         else:
-            stream = self.streamsCollection.find_one({'_id': _id})
+            stream = self.streams_collection.find_one({'_id': _id})
 
         # read length
         duration_in_seconds = stream.get('duration')
@@ -104,8 +135,8 @@ class DBClient:
 
         clip_end_time = clip_start_time + clip_duration
 
-        results = self.streamsCollection.find({"streamer": streamer, "datetime": {
-                                              '$gte': str(clip_start_time), '$lt': str(clip_end_time)}})
+        results = self.streams_collection.find({"streamer": streamer, "datetime": {
+            '$gte': str(clip_start_time), '$lt': str(clip_end_time)}})
 
         total_data = []
         for result in results:
@@ -127,12 +158,12 @@ class DBClient:
         stream = None
 
         if not _id:
-            stream = self.streamsCollection.find_one({'streamer': streamer}, sort=[
+            stream = self.streams_collection.find_one({'streamer': streamer}, sort=[
                 ('_id', -1)])  # sort in descending order
         else:
-            stream = self.streamsCollection.find_one({'_id': _id})
+            stream = self.streams_collection.find_one({'_id': _id})
 
-        stream = self.streamsCollection.find_one({'streamer': streamer}, sort=[
+        stream = self.streams_collection.find_one({'streamer': streamer}, sort=[
                                                  ('_id', -1)])  # sort in descending order
 
         # read length
@@ -155,8 +186,8 @@ class DBClient:
             # increment start time
             start_time = start_time + datetime.timedelta(minutes=1)
             end_time = start_time + datetime.timedelta(minutes=1)
-            results = self.messagesCollection.find({"streamer": streamer, "datetime": {
-                                                   '$gte': str(start_time), '$lt': str(end_time)}})
+            results = self.messages_collection.find({"streamer": streamer, "datetime": {
+                '$gte': str(start_time), '$lt': str(end_time)}})
 
             if results.count():
 
@@ -170,7 +201,7 @@ class DBClient:
                                    'messeges_count': results.count(),
                                    'source_clip': streamer})
 
-        results = self.messagesCollection.find({"streamer": streamer})
+        results = self.messages_collection.find({"streamer": streamer})
 
         print("total messages: " + str(results.count()))
 
