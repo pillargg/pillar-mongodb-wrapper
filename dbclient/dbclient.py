@@ -50,7 +50,7 @@ class DBClient:
         message_document = {
             "username": username,
             "contents": contents,
-            "datetime": str(timestamp),
+            "timestamp": str(timestamp),
             "streamer": streamer,
             "platform_video_id": video,
             "platform": platform
@@ -77,7 +77,7 @@ class DBClient:
 
         stream_document = {
             "author": author,
-            "datetime": str(timestamp),
+            "started_at": str(timestamp),
             "viewers": viewers,
             "duration": duration,
             "platform_video_id": video_id,
@@ -103,7 +103,7 @@ class DBClient:
                 "started_at": "2021-02-22T18:51:52Z",
                 "duration": 3600
             },
-            "placement": 12,
+            "position": 12,
             "duration": 60,
             "tags": [],
             "s3_url": "",
@@ -113,96 +113,17 @@ class DBClient:
 
         return self.clip_collection.insert_one(clip_data).inserted_id
 
-    def analyze_number_of_stream_viewers(self, streamer, datetime, _id=None):
-        """
-        This function returns a streamers viewers over time
-        This should be moved to the 
-        """
-        stream = None
-        if not _id:
-            stream = self.streams_collection.find_one({'streamer': streamer}, sort=[
-                ('_id', -1)])  # sort in descending order
-        else:
-            stream = self.streams_collection.find_one({'_id': _id})
+    def get_chat_messages(self, platform_video_id, author=None, platform='twitch'):
+        '''
+        Gets the chat messages for the given platform_video_id and author
+        '''
 
-        # read length
-        duration_in_seconds = stream.get('duration')
-        # get start time and convert to datetime
-        clip_start_time = datetime.datetime.strptime(
-            stream.get('datetime'), '%Y-%m-%d %H:%M:%S.%f')
+        query = {
+            'platform_video_id': platform_video_id,
+            'platform': platform
+        }
 
-        clip_duration = datetime.timedelta(seconds=duration_in_seconds)
+        if author:
+            query['author'] = author
 
-        clip_end_time = clip_start_time + clip_duration
-
-        results = self.streams_collection.find({"streamer": streamer, "datetime": {
-            '$gte': str(clip_start_time), '$lt': str(clip_end_time)}})
-
-        total_data = []
-        for result in results:
-            clips_real_time = datetime.datetime.strptime(
-                result['datetime'], '%Y-%m-%d %H:%M:%S.%f')
-            output_time = clips_real_time - clip_start_time
-            total_data.append({'deltatime_from_start_of_clip': output_time,
-                               'num_viewers': result['numviewers'], 'source_clip': streamer})
-
-        return total_data
-
-    def clip_message_analytics(self, streamer, _id=None):
-        """
-        This function returns a streamers message information during the duration of a videoclip
-
-        This should be moved to the clip_processor project by extending this class
-        """
-
-        stream = None
-
-        if not _id:
-            stream = self.streams_collection.find_one({'streamer': streamer}, sort=[
-                ('_id', -1)])  # sort in descending order
-        else:
-            stream = self.streams_collection.find_one({'_id': _id})
-
-        stream = self.streams_collection.find_one({'streamer': streamer}, sort=[
-                                                 ('_id', -1)])  # sort in descending order
-
-        # read length
-        duration_in_seconds = stream.get('duration')
-        # get start time and convert to datetime
-        clip_start_time = datetime.datetime.strptime(
-            stream.get('datetime'), '%Y-%m-%d %H:%M:%S.%f')
-
-        minutes = math.ceil(duration_in_seconds / 60)
-
-        # get average messages/min
-        # repeated searches through mongo db using rotating minutemark
-
-        # make array of datetimes
-
-        total_data = []
-
-        start_time = clip_start_time - datetime.timedelta(minutes=1)
-        for x in range(minutes):
-            # increment start time
-            start_time = start_time + datetime.timedelta(minutes=1)
-            end_time = start_time + datetime.timedelta(minutes=1)
-            results = self.messages_collection.find({"streamer": streamer, "datetime": {
-                '$gte': str(start_time), '$lt': str(end_time)}})
-
-            if results.count():
-
-                output_start_time = start_time - clip_start_time
-                output_end_time = end_time - clip_start_time
-                print("Adding data for time: " +
-                      str(output_start_time) + ' to ' + str(output_end_time))
-
-                total_data.append({'start_time': output_start_time,
-                                   'end_time': output_end_time,
-                                   'messeges_count': results.count(),
-                                   'source_clip': streamer})
-
-        results = self.messages_collection.find({"streamer": streamer})
-
-        print("total messages: " + str(results.count()))
-
-        return total_data
+        return self.messages_collection.find(query)
