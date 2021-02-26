@@ -3,6 +3,7 @@ import math
 import os
 
 from pymongo import MongoClient
+from bson import ObjectId
 
 from .lib import duration_to_int
 
@@ -127,3 +128,17 @@ class DBClient:
             query['author'] = author
 
         return self.messages_collection.find(query)
+
+    def get_stream_by_mongo_id(self, _id):
+        '''
+        Gets the stream with the given MongoDB ID
+        '''
+
+        return self.streams_collection.find_one({'_id': ObjectId(_id)})
+
+    def get_latest_stream_from_author(self, author):
+        '''
+        Gets the latest stream from an author
+        '''
+        return self.streams_collection.find_one({'author': author}, sort=[
+            ('_id', -1)])  # sort in descending order
