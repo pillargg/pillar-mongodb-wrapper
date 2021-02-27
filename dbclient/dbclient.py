@@ -52,7 +52,7 @@ class DBClient:
             "username": username,
             "contents": contents,
             "timestamp": str(timestamp),
-            "streamer": streamer,
+            "author": streamer,
             "platform_video_id": video,
             "platform": platform
         }
@@ -142,3 +142,52 @@ class DBClient:
         '''
         return self.streams_collection.find_one({'author': author}, sort=[
             ('_id', -1)])  # sort in descending order
+
+    def get_chat_messages_in_date_range(self, platform_video_id, start, end, platform='twitch', author=None):
+        '''
+        Gets all chat messages in a date range from `start` to `end`, where `start` and `end` are arrow date types.
+        `start` and `end` can also be datestrings in the following format: `%Y-%m-%dT%H:%M:%S.%f+00:00`
+        '''
+
+        query = {
+            'platform_video_id': platform_video_id,
+            'platform': platform,
+            'timestamp': {
+                '$gte': str(start),
+                '$lt': str(end)
+            }
+        }
+
+        if author:
+            query['author'] = author
+
+        return self.messages_collection.find(query)
+
+    def purge_clips(self, platform_video_id, author=None, platform='twitch'):
+        '''
+        Deletes clips with the matching inputs. Returns the number of deleted clips.
+        '''
+
+        query = {
+            'platform': platform,
+            'platform_video_id': video_id
+        }
+
+        if author:
+            query['author'] = author
+
+        return self.clip_collection.delete_many(query).deleted_count
+
+    def purge_messages(self, platform_video_id, author=None, platform='twitch'):
+        '''
+        Deletes messages with the matching inputs. Returns the number of deleted messages.
+        '''
+        query = {
+            'platform': platform,
+            'platform_video_id': video_id
+        }
+
+        if author:
+            query['author'] = author
+
+        return self.messages_collection.delete_many(query).deleted_count
