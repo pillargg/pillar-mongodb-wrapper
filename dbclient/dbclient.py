@@ -170,7 +170,7 @@ class DBClient:
 
         query = {
             'platform': platform,
-            'platform_video_id': video_id
+            'platform_video_id': platform_video_id
         }
 
         if author:
@@ -184,7 +184,7 @@ class DBClient:
         '''
         query = {
             'platform': platform,
-            'platform_video_id': video_id
+            'platform_video_id': platform_video_id
         }
 
         if author:
