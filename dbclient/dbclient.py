@@ -114,6 +114,33 @@ class DBClient:
 
         return self.clip_collection.insert_one(clip_data).inserted_id
 
+    def update_clip_url(self, clip_id, url):
+        '''
+        Updates clip by mongodb ID. Returns the new value.
+        '''
+
+        query = {'_id': ObjectId(clip_id)}
+        values = {'$set': {'s3_url': url}}
+
+        self.clip_collection.update_one(query, values)
+
+        return self.clip_collection.find_one(query)
+
+    def get_clips(self, platform_video_id, author=None, platform='twitch'):
+        '''
+        Gets clips based on their platform_video_id, author, and platform.
+        '''
+
+        query = {
+            'platform_video_id': platform_video_id,
+            'platform': platform
+        }
+
+        if author:
+            query['author'] = author
+
+        return self.clip_collection.find(query)
+
     def get_chat_messages(self, platform_video_id, author=None, platform='twitch'):
         '''
         Gets the chat messages for the given platform_video_id and author
