@@ -1,0 +1,25 @@
+site_name: PIllar MongoDB Wrapper
+
+theme:
+  name: "material"
+  palette:
+    scheme: slate
+    primary: black
+    accent: deep purple
+  logo: pillargg.png
+  favicon: pillargg.png
+  icon:
+    repo: fontawesome/brands/github
+
+repo_url: https://github.com/pillargg/pillar-mongodb-wrapper
+repo_name: pillargg/pillar-mongodb-wrapper
+
+plugins:
+- mkdocstrings:
+    default_handler: python
+    handlers:
+      python:
+        rendering: 
+          show_sources: false
+      watch:
+        - dbclient

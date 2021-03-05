@@ -10,7 +10,7 @@ from .lib import duration_to_int
 
 class DBClient:
     """
-    Class handles all connections to and from the MongoDB database.
+    Class that handles all connections to and from the MongoDB database.
     """
 
     def __init__(self, output_file_location='', override_url=None):
@@ -91,6 +91,7 @@ class DBClient:
     def input_clip(self, clip_data):
         '''
         Inputs a clip to the database. Here is an example of what the clip data should look like.
+        ```JSON
         {
             "title": "Chandler gets headshot",
             "description": "I get shot in the face",
@@ -110,6 +111,7 @@ class DBClient:
             "s3_url": "",
             "score": 69
         }
+        ```
         '''
 
         return self.clip_collection.insert_one(clip_data).inserted_id
