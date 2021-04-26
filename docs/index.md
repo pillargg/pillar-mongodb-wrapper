@@ -16,6 +16,8 @@
             - get_chat_messages_in_date_range
             - purge_clips
             - purge_messages
+            - get_user_by_twitch_login
+            - get_user_by_twitch_id
     rendering: 
         show_root_heading: false
         show_source: false
