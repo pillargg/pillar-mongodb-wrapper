@@ -13,30 +13,32 @@ class DBClient:
     Class that handles all connections to and from the MongoDB database.
     """
 
-    def __init__(self, output_file_location='', override_url=None):
+    def __init__(self, db_name=None, connect_str=None, output_file_location=''):
         """
         Initializes the connection to the MongoDB database
         """
 
-        self.db_name = os.environ.get("MONGODB_DBNAME")
-        print('DB NAME: ' + os.environ.get("MONGODB_DBNAME"))
+        self.db_name = db_name
+        if db_name is None:
+            self.db_name = os.environ.get("MONGODB_DBNAME")
 
         self.output_file_location = output_file_location
 
         self.mongo_client = None
 
-        if override_url is None:
+        if connect_str is None:
             self.mongo_client = MongoClient(
                 'mongodb+srv://admin:' +
                 os.environ.get('MONGODB_PASS') +
                 '@c0.relki.mongodb.net')
         else:
-            self.mongo_client = MongoClient(override_url)
+            self.mongo_client = MongoClient(connect_str)
 
         self.db = self.mongo_client[self.db_name]
         self.messages_collection = self.db["messages"]
         self.streams_collection = self.db["streams"]
         self.clip_collection = self.db["clips"]
+        self.user_collection = self.db["users"]
 
     def input_message(self, username, contents, timestamp, streamer, video=None, platform="twitch"):
         """
@@ -220,3 +222,23 @@ class DBClient:
             query['author'] = author
 
         return self.messages_collection.delete_many(query).deleted_count
+
+    def get_user_by_twitch_login(self, twitch_login):
+        '''
+        Gets a user's info by their twitch login name.
+        '''
+        query = {
+            'twitch_username': twitch_login
+        }
+
+        return self.user_collection.find_one(query)
+
+    def get_user_by_twitch_id(self, twitch_id):
+        '''
+        Gets a user's info by their twitch ID
+        '''
+        query = {
+            'twitch_id': twitch_id
+        }
+
+        return self.user_collection.find_one(query)
